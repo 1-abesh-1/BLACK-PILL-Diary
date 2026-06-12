@@ -37,51 +37,40 @@ void oled_init(char i2c){
         oled_cmd(i2c, sequence[i]);
     }
 
-    oled_clear(i2c);
+  
     oled_cmd(i2c, 0xAF); // Display On
 }
 
-void oled_clear(char i2c) {
-    for (int page = 0; page < 8; page++) {
-        oled_cmd(i2c, 0xB0 + page); 
-        oled_cmd(i2c, 0x00); 
-        oled_cmd(i2c, 0x10); 
-        
-        for (int col = 0; col < 128; col++) {
-            oled_data(i2c, 0x00); // <-- FIXED: Changed to oled_data
-        }
-    }
+
+void oled_pos(char i2c, char Ypos, char Xpos){
+oled_cmd(i2c, 0x00+(0x0F & Xpos));
+oled_cmd(i2c, 0x10+(0x0F & (Xpos>>4)));
+oled_cmd(i2c, 0xB0+(0x0F & Ypos));
+
 }
 
-void oled_set_cursor(char i2c, uint8_t page, uint8_t col) {
-    if (page > 7)   page = 7;
-    if (col > 127)  col = 127;
+void oled_blank(char i2c){
+int i,j;
 
-    oled_cmd(i2c, 0xB0 + page); 
-    oled_cmd(i2c, 0x00 + (col & 0x0F));       
-    oled_cmd(i2c, 0x10 + ((col >> 4) & 0x0F)); 
-}
-
-void oled_print_char(char i2c, char c) {
-    if (c < 32 || c > 90) {
-        c = ' '; 
-    }
-
-    uint32_t font_index = c - 32;
-
-    for (int col = 0; col < 5; col++) {
-        oled_data(i2c, SSD1306_FONT[font_index][col]); // <-- FIXED: Changed to oled_data
-    }
-    oled_data(i2c, 0x00); // <-- FIXED: Changed to oled_data
-}
-
-void oled_print_str(char i2c, const char* str) {
-    while (*str != '\0') {
-        char current_char = *str;
-        if (current_char >= 'a' && current_char <= 'z') {
-            current_char -= 32; 
-        }
-        oled_print_char(i2c, current_char);
-        str++; 
+for(i=0;i<8;i++){
+    oled_pos(i2c,i,0);
+    for(j=0;j<128;j++){
+oled_data(i2c,0x00);
     }
 }
+oled_pos(i2c,0,0);
+}
+
+
+void oled_print(char i2c,char str[]){
+int i,j;
+i=0;
+while(str[i]){
+    for(j=0;j<5;j++){
+oled_data(i2c,FONT[str[i]-32][j]);
+    }
+  oled_data(i2c,0x00);
+    i++;
+}
+}
+
